@@ -76,7 +76,7 @@ namespace Überstundenkonto
 
           Console.Write("Please enter the overtime amount in hours: ");
           var input = Convert.ToDouble(Console.ReadLine());
-          if (input < .5 || input > 64)
+          if (input < -64 || input > 64)
             continue;
           if (ENTRIES == null)
             ENTRIES = new List<Entry>();
@@ -97,6 +97,13 @@ namespace Überstundenkonto
       while (!end)
       {
         Console.Clear();
+        if (GetLimited() && GetOvertimeLimit() <= ENTRIES.Sum(x => x.Amount))
+        {
+          var oldColor = Console.ForegroundColor;
+          Console.ForegroundColor = ConsoleColor.Red;
+          Console.WriteLine("WARNING! OVERTIME LIMIT REACHED!");
+          Console.ForegroundColor = oldColor;
+        }
         Console.WriteLine("Please choose between the following options: ");
         Console.WriteLine("1.) Configure overtime limit");
         Console.WriteLine("2.) List overtime list");
@@ -107,7 +114,7 @@ namespace Überstundenkonto
         {
           var input = Convert.ToInt32(Console.ReadLine());
           if (input < 1 || input > 4)
-            continue;
+            Environment.Exit(0);
           switch (input)
           {
             case 1:
@@ -149,23 +156,25 @@ namespace Überstundenkonto
         while (!end)
         {
           Console.WriteLine($"Current settings: Limiter activated. Limit at {GetOvertimeLimit()}h");
-          Console.Write("Press '1' to disable limiter or press '2' to edit the limit.\nInput: ");
+          Console.Write("Press '1' to disable limiter or press '2' to edit the limit or press '3' to go back.\nInput: ");
           try
           {
             var input = Convert.ToInt32(Console.ReadLine());
-            if (input < 1 || input > 2)
+            if (input < 1 || input > 3)
               continue;
             if (input == 1)
             {
               SetLimited(false);
               return;
             }
+            else if (input == 3)
+              return;
             else
             {
               Console.Write("Please enter the new limit: ");
               var input2 = Convert.ToDouble(Console.ReadLine());
-              if (input > 0 && input < 64)
-                SetOvertimeLimit(input);
+              if (input2 > -64 && input2 < 64)
+                SetOvertimeLimit(input2);
               else
                 continue;
             }
@@ -185,7 +194,7 @@ namespace Überstundenkonto
 
     private static void FirstConfigOvertimeLimit()
     {
-      if (GetOvertimeLimit() == default(double))
+      if (!GetLimited() || GetOvertimeLimit() == default(double))
       {
         var end = false;
         while (!end)
@@ -206,7 +215,7 @@ namespace Überstundenkonto
         end = false;
         while (!end && GetLimited())
         {
-          Console.Write("Please enter the overtime limit: ");
+          Console.Write("\nPlease enter the overtime limit: ");
           try
           {
             var input = Convert.ToDouble(Console.ReadLine());
